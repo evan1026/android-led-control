@@ -12,17 +12,27 @@ import java.net.URLEncoder
 private fun getBaseUrl() = "http://192.168.1.103:5000"
 private fun getBrightnessUrl() = getBaseUrl() + "/set_value/brightness"
 
-private suspend fun sendGetRequest(urlString: String) = sendGetRequest(urlString, mapOf())
+private suspend fun sendGetRequest(urlString: String)
+    = sendGetRequest(urlString, mapOf())
+private suspend fun sendGetRequest(urlString: String, params: Map<String, String>)
+    = sendRequest("GET", urlString, params)
+private suspend fun sendPutRequest(urlString: String)
+    = sendPutRequest(urlString, mapOf())
+private suspend fun sendPutRequest(urlString: String, params: Map<String, String>)
+    = sendRequest("PUT", urlString, params)
+private suspend fun sendPostRequest(urlString: String)
+    = sendPostRequest(urlString, mapOf())
+private suspend fun sendPostRequest(urlString: String, params: Map<String, String>)
+    = sendRequest("POST", urlString, params)
 
-private suspend fun sendGetRequest(urlString: String, params: Map<String, String>) {
-
+private suspend fun sendRequest(requestType: String, urlString: String, params: Map<String, String>) {
     val url =
         if (params.isEmpty()) URL(urlString)
         else URL("${urlString}?${encodeUrlParams(params)}")
 
     withContext(Dispatchers.IO) {
         with(url.openConnection() as HttpURLConnection) {
-            requestMethod = "GET"
+            requestMethod = requestType
             BufferedReader(InputStreamReader(inputStream)).use {
                 val response = StringBuffer()
 
@@ -33,7 +43,7 @@ private suspend fun sendGetRequest(urlString: String, params: Map<String, String
                 }
                 it.close()
 
-                Log.i("sendGetRequest", response.toString())
+                Log.i("sendRequest", response.toString())
             }
         }
     }
@@ -47,5 +57,5 @@ private fun encodeEntry(entry: Map.Entry<String, String>) =
 
 suspend fun setBrightness(brightness: Int) {
     assert(brightness in 0..255) { "Invalid brightness: $brightness" }
-    sendGetRequest(getBrightnessUrl(), mapOf(Pair("value", brightness.toString())))
+    sendPutRequest(getBrightnessUrl(), mapOf(Pair("value", brightness.toString())))
 }
